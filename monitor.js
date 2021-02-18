@@ -6,7 +6,7 @@ const poolList = require("./config.js");
 
 const ETHUSDCPool = "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc";
 
-let provider = ethers.getDefaultProvider("wss://mainnet.infura.io/ws/v3/ xxxxxxxxxxxxxxxxxxx ")
+let provider = ethers.getDefaultProvider("wss://mainnet.infura.io/ws/v3/ xxxxxxxxxxxxxxxxxxxxxx ")
 
 let topic = ethers.utils.id("nameRegistered(bytes32,address,uint256)");
 
@@ -57,6 +57,11 @@ let priceOfOneLP;
 
 for (let i = 0; i < poolList.length; i++) {
     const poolAddr = poolList[i].uniswapAddress;
+    const category = poolList[i].category;
+    const decimal0 = poolList[i].token0;
+    const decimal1 = poolList[i].token1;
+    const name0 = poolList[i].token0Name;
+    const name1 = poolList[i].token1Name;
     let liqPool = new ethers.Contract(poolAddr, uniPoolABI, provider);
 
     let filter = {
@@ -67,29 +72,81 @@ for (let i = 0; i < poolList.length; i++) {
     provider.on(filter, (result) => {
         console.log("1");
     })
-    
-    liqPool.on("Swap", async (sender, amount0In, amount1In, amount0Out, amount1Out, to) => {
-        let USDCIn = parseFloat(amount0In.toString());
-        USDCIn = USDCIn / (10 ** 6);
-    
-        let ETHIn = parseFloat(amount1In.toString());
-        ETHIn = ETHIn / (10 ** 18);
-    
-        let USDCOut = parseFloat(amount0Out.toString());
-        USDCOut = USDCOut / (10 ** 6);
-    
-        let ETHOut = parseFloat(amount1Out.toString());
-        ETHOut = ETHOut / (10 ** 18);
-    
-        if (USDCIn > 500000) {
-            console.log("USDC IN: " + USDCIn + "  ETH out: " + ETHOut);
-        } else if (USDCOut > 500000) {
-            console.log("ETH In: " + ETHIn + "  USDC Out: " + USDCOut);
-        }
-    
-        LPValueCheck();
+    if (category === "Stablecoins") {
+        liqPool.on("Swap", async (sender, amount0In, amount1In, amount0Out, amount1Out, to) => {
+            let toke0 = parseFloat(amount0In.toString());
+            toke0 = toke0 / (10 ** decimal0);
         
-    })
+            let toke1 = parseFloat(amount1In.toString());
+            toke1 = toke1 / (10 ** decimal1);
+        
+            let toke0Out = parseFloat(amount0Out.toString());
+            toke0Out = toke0Out / (10 ** decimal0);
+        
+            let toke1Out = parseFloat(amount1Out.toString());
+            toke1Out = toke1Out / (10 ** decimal1);
+        
+            if (toke0 > 500000) {
+                console.log(`${name0} IN:  ${toke0}  ${name1} out:  ${toke1Out}`)
+                // console.log("USDC IN: " + toke0 + "  ETH out: " + toke1Out);
+            } else if (toke0Out > 500000) {
+                console.log(`${name1} In:  ${toke1}   ${name0} Out:  ${toke0Out}`);
+                // console.log("ETH In: " + toke1 + "  USDC Out: " + toke0Out);
+            }
+            
+            // LPValueCheck();
+            
+        })
+    } else if (category === "ETH-Stablecoin") {
+        const baseAssetPos = poolList[i].baseAsset;
+        liqPool.on("Swap", async (sender, amount0In, amount1In, amount0Out, amount1Out, to) => {
+            let toke0 = parseFloat(amount0In.toString());
+            toke0 = toke0 / (10 ** decimal0);
+        
+            let toke1 = parseFloat(amount1In.toString());
+            toke1 = toke1 / (10 ** decimal1);
+        
+            let toke0Out = parseFloat(amount0Out.toString());
+            toke0Out = toke0Out / (10 ** decimal0);
+        
+            let toke1Out = parseFloat(amount1Out.toString());
+            toke1Out = toke1Out / (10 ** decimal1);
+
+            let comparativeIn;
+            let comparativeOut;
+            let otherIn;
+            let otherOut;
+            let comparativeName;
+            let otherName;
+            if (baseAsset === 0) {
+                comparativeIn = toke0;
+                comparativeOut = toke0Out;
+                otherIn = toke1;
+                otherOut = toke1Out;
+                comparativeName = name0;
+                otherName = name1;
+            } else if (baseAsset === 1) {
+                comparativeIn = toke1;
+                comparativeOut = toke1Out;
+                otherIn = toke0;
+                otherOut = toke0Out;
+                comparativeName = name1;
+                otherName = name0;
+            }
+        
+            if (comparativeIn > 500000) {
+                console.log(`${comparativeName} IN:  ${comparativeIn}  ${otherName} out:  ${otherOut}`)
+                // console.log("USDC IN: " + toke0 + "  ETH out: " + toke1Out);
+            } else if (comparativeOut > 500000) {
+                console.log(`${otherName} In:  ${otherIn}   ${comparativeName} Out:  ${comprativeOut}`);
+                // console.log("ETH In: " + toke1 + "  USDC Out: " + toke0Out);
+            }
+            
+            // LPValueCheck();
+            
+        })
+    }
+    
 }
 
 
