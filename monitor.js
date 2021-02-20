@@ -6,7 +6,7 @@ const poolList = require("./config.js");
 
 const ETHUSDCPool = "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc";
 
-let provider = ethers.getDefaultProvider("wss://mainnet.infura.io/ws/v3/ xxxxxxxxxxxxxxxx ")
+let provider = ethers.getDefaultProvider("wss://mainnet.infura.io/ws/v3/ XXXXXXXXXXXXXXXXXXXXXX ")
 
 let topic = ethers.utils.id("nameRegistered(bytes32,address,uint256)");
 
@@ -28,6 +28,7 @@ const LPValueStartup = async (liqPool, stableCoin, stableCoinDecimal) => {
     let totalValue = USDCRes * 2;
     let LPs = totalLP / (10 ** LPDecimal);
     let pricePerLP = totalValue / LPs;
+    // console.log(true);
     return pricePerLP;
     // console.log(pricePerLP);
 }
@@ -63,6 +64,7 @@ const LPValueCheck = async (liqPool, stableCoin, stableCoinDecimal, priceOfOneLP
             }
         }
     }
+    // console.log("true 2")
 }
 // LPValueStartup();
 
@@ -109,6 +111,9 @@ for (let i = 0; i < poolList.length; i++) {
             LPValueCheck(liqPool, 0, decimal0, priceOfOneLP);
             
         })
+        const LPValueUpdator = setInterval(() => {
+            priceOfOneLP = LPValueStartup(liqPool, 0, decimal0);
+        }, 60000)
     } else if (category === "ETH-Stablecoin") {
         const baseAssetPos = poolList[i].baseAsset;
         let priceOfOneLP;
@@ -168,12 +173,16 @@ for (let i = 0; i < poolList.length; i++) {
             
             
         })
+        const LPValueUpdator = setInterval(() => {
+            if (baseAssetPos === 0) {
+                priceOfOneLP = LPValueStartup(liqPool, baseAssetPos, decimal0);
+            } else if (baseAssetPos === 1) {
+                priceOfOneLP = LPValueStartup(liqPool, baseAssetPos, decimal1);
+            }
+        }, 60000)
     }
     
 }
 
 
 // runs once an hour
-// const LPValueUpdator = setInterval(() => {
-//     LPValueStartup();
-// }, 60000)
